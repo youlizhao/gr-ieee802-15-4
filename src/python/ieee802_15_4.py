@@ -28,7 +28,7 @@
 # Modified by: Thomas Schmid, Leslie Choong, Sanna Leidelof
 #
 
-from gnuradio import gr, ucla
+from gnuradio import gr, ucla, digital
 from math import pi
 
 class ieee802_15_4_mod(gr.hier_block2):
@@ -44,9 +44,10 @@ class ieee802_15_4_mod(gr.hier_block2):
 	@type spb: integer
 	"""
 	try:
-		self.spb = kwargs.pop('spb')
+            self.spb = kwargs.pop('spb')
+            self.log = kwargs.pop('log') 
 	except KeyError:
-		pass
+	    pass
 
 	gr.hier_block2.__init__(self, "ieee802_15_4_mod",
 				gr.io_signature(1, 1, 1),  # Input
@@ -62,10 +63,15 @@ class ieee802_15_4_mod(gr.hier_block2):
         self.pskmod = ucla.qpsk_modulator_cc()
         self.delay = ucla.delay_cc(self.spb+1)
 
-
 	# Connect
 	self.connect(self, self.symbolsToChips, self.chipsToSymbols,
                    self.symbolsToConstellation, self.pskmod, self.delay, self)
+
+        if self.log:
+            self.connect(self.symbolsToChips, gr.file_sink(gr.sizeof_int, 'tx-s2c.dat'))
+            self.connect(self.chipsToSymbols, gr.file_sink(gr.sizeof_int, 'tx-c2S.dat'))
+            self.connect(self.symbolsToConstellation, gr.file_sink(gr.sizeof_gr_complex, 'tx-symbol.dat'))
+            self.connect(self.pskmod, gr.file_sink(gr.sizeof_gr_complex, 'tx-psk.dat'))
 
 class ieee802_15_4_demod(gr.hier_block2):
     def __init__(self, *args, **kwargs):
@@ -111,7 +117,7 @@ class ieee802_15_4_demod(gr.hier_block2):
         freq_error=0.0
 
         gain_omega = .25*gain_mu*gain_mu        # critically damped
-        self.clock_recovery = gr.clock_recovery_mm_ff(omega, gain_omega, mu, gain_mu,
+        self.clock_recovery = digital.clock_recovery_mm_ff(omega, gain_omega, mu, gain_mu,
                                                       omega_relative_limit)
 
         # Connect

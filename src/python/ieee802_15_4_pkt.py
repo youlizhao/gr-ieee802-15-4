@@ -24,9 +24,10 @@
 # Modified by: Thomas Schmid, Leslie Choong, Sanna Leidelof
 #
 
-import Numeric
+# import Numeric
 
-from gnuradio import gr, packet_utils, gru
+from gnuradio import gr, gru
+from gnuradio.digital import packet_utils 
 from gnuradio import ucla
 import crc16
 import gnuradio.gr.gr_threading as _threading
@@ -155,9 +156,10 @@ class ieee802_15_4_mod_pkts(gr.hier_block2):
         See 802_15_4_mod for remaining parameters
         """
 	try:
-		self.msgq_limit = kwargs.pop('msgq_limit')
+	    self.msgq_limit = kwargs.pop('msgq_limit')
+            self.log = kwargs.get('log')
 	except KeyError:
-		pass
+	    pass
 
 	gr.hier_block2.__init__(self, "ieee802_15_4_mod_pkts",
 				gr.io_signature(0, 0, 0),  # Input
@@ -168,6 +170,9 @@ class ieee802_15_4_mod_pkts(gr.hier_block2):
         self.pkt_input = gr.message_source(gr.sizeof_char, self.msgq_limit)
         self.ieee802_15_4_mod = ieee802_15_4.ieee802_15_4_mod(self, *args, **kwargs)
         self.connect(self.pkt_input, self.ieee802_15_4_mod, self)
+
+        if self.log:
+            self.connect(self.pkt_input, gr.file_sink(gr.sizeof_char, 'tx-input.dat'))
 
     def send_pkt(self, seqNr, addressInfo, payload='', eof=False):
         """
@@ -191,7 +196,7 @@ class ieee802_15_4_mod_pkts(gr.hier_block2):
                                            addressInfo,
                                            payload,
                                            self.pad_for_usrp)
-             #print "pkt =", packet_utils.string_to_hex_list(pkt), len(pkt)
+            print "pkt =", packet_utils.string_to_hex_list(pkt), len(pkt)
             msg = gr.message_from_string(pkt)
         self.pkt_input.msgq().insert_tail(msg)
 
