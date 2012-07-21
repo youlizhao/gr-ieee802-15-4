@@ -29,7 +29,7 @@
 from gnuradio import gr, gru
 from gnuradio.digital import packet_utils 
 from gnuradio import ucla
-import crc16
+from gnuradio.ucla_blks import crc16
 import gnuradio.gr.gr_threading as _threading
 import ieee802_15_4
 import struct

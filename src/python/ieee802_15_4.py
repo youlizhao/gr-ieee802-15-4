@@ -86,6 +86,7 @@ class ieee802_15_4_demod(gr.hier_block2):
         """
 	try:
 		self.sps = kwargs.pop('sps')
+                self.log = kwargs.pop('log')
 	except KeyError:
 		pass
 
@@ -122,3 +123,9 @@ class ieee802_15_4_demod(gr.hier_block2):
 
         # Connect
         self.connect(self.sub, self.clock_recovery, self)
+
+        if self.log:
+            self.connect(self.fmdemod, gr.file_sink(gr.sizeof_float, 'rx-fmdemod.dat'))
+            self.connect(self.freq_offset, gr.file_sink(gr.sizeof_float, 'rx-fo.dat'))
+            self.connect(self.sub, gr.file_sink(gr.sizeof_float, 'rx-sub.dat'))
+            self.connect(self.clock_recovery, gr.file_sink(gr.sizeof_float, 'rx-recovery.dat'))

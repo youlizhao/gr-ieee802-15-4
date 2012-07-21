@@ -28,17 +28,21 @@ def crcbitbybit(p):
      
      for i in range(len(p)):
           c = p[i]
+          #print ord(c),
           c = reflect(ord(c), 8)
+          #print c
           j=0x80
           for b in range(16):
                bit = crc & 0x8000
                crc <<= 1
                crc &=0xFFFF
+               #print "LOOP", c&j, bit,
                if c & j:
                     crc |= 1
                if bit:
                     crc ^= 0x1021
                j>>=1
+               #print crc, j
                if j == 0:
                     break
             
@@ -85,7 +89,11 @@ class CRC16(object):
 crc = CRC16()
 #crc.update("123456789")
 import struct
-crc.update(struct.pack("20B", 0x1, 0x88, 0xe5, 0xff, 0xff, 0xff, 0xff, 0x10, 0x0, 0x10, 0x0, 0x1, 0x80, 0x80, 0xff, 0xff, 0x10, 0x0, 0x20, 0x0))
-
-assert crc.checksum() == '\x02\x82'
+#crc.update(struct.pack('3B', 0x02, 0x00, 0x6A))
+crc.update(struct.pack('15B', 0x41, 0x88, 0xc2, 0x22, 0x00, 0xff, 0xff, 0x01, 0x00, 0x3f, 0x06, 0x00, 0x01, 0x0e, 0xc3))
+#print crc.hexchecksum()
+assert crc.checksum() == '\xd5\x25'
+#assert crc.checksum() == '\x27\x9e'
+#crc.update(struct.pack("20B", 0x1, 0x88, 0xe5, 0xff, 0xff, 0xff, 0xff, 0x10, 0x0, 0x10, 0x0, 0x1, 0x80, 0x80, 0xff, 0xff, 0x10, 0x0, 0x20, 0x0))
+#assert crc.checksum() == '\x02\x82'
 
