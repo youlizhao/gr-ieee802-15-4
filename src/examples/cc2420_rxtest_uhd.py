@@ -18,7 +18,10 @@ class oqpsk_rx_graph (gr.top_block):
     def __init__(self, options, rx_callback):
         gr.top_block.__init__(self)
 
-        if (options.rx_freq) is not None or (options.channel is not None):
+        if options.infile is not None:
+            self.chan_num = options.channel
+            u = gr.file_source(gr.sizeof_gr_complex, options.infile)
+        elif (options.rx_freq) is not None or (options.channel is not None):
             if options.channel is not None:
               self.chan_num = options.channel
               options.rx_freq = ieee802_15_4_pkt.chan_802_15_4.chan_map[self.chan_num]
@@ -28,8 +31,6 @@ class oqpsk_rx_graph (gr.top_block):
                              options.rx_freq, options.rx_gain,
                              options.spec, options.antenna,
                              options.verbose, options.external)
-        elif options.infile is not None:
-            u = gr.file_source(gr.sizeof_gr_complex, options.infile)
         else:
             sys.stderr.write("--freq or --infile must be specified\n")
             raise SystemExit
@@ -42,7 +43,8 @@ class oqpsk_rx_graph (gr.top_block):
                                 sps=self.samples_per_symbol,
                                 symbol_rate=self.data_rate,
                                 channel=self.chan_num,
-                                threshold=options.threshold)
+                                threshold=options.threshold,
+                                log=options.log)
 
         self.src = u
         #self.squelch = gr.pwr_squelch_cc(-65, gate=True)
@@ -50,13 +52,16 @@ class oqpsk_rx_graph (gr.top_block):
          #       self.squelch,
                 self.packet_receiver)
 
+        #if options.log:
+        #    self.connect(self.src, gr.file_sink(gr.sizeof_gr_complex, 'cc2420-rx-diag.dat'))
+
     def add_options(normal, expert):
         """
         Adds usrp-specific options to the Options Parser
         """
         normal.add_option("", "--infile", type="string",
                           help="select input file to TX from")
-        normal.add_option ("-c", "--channel", type="eng_float", default=15,
+        normal.add_option ("-c", "--channel", type="eng_float", default=17,
                           help="Set 802.15.4 Channel to listen on channel %default", metavar="FREQ")
         normal.add_option("-v", "--verbose", action="store_true", default=False)
         normal.add_option("-W", "--bandwidth", type="eng_float",

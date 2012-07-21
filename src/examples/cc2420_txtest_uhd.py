@@ -23,7 +23,9 @@ class transmit_path(gr.top_block):
     def __init__(self, options):
         gr.top_block.__init__(self)
 
-        if (options.tx_freq is not None) or (options.channel is not None):
+        if options.outfile is not None:
+          u = gr.file_sink(gr.sizeof_gr_complex, options.outfile)
+        elif (options.tx_freq is not None) or (options.channel is not None):
           if options.channel is not None:
             self.chan_num = options.channel
             options.tx_freq = ieee802_15_4_pkt.chan_802_15_4.chan_map[self.chan_num]
@@ -33,8 +35,6 @@ class transmit_path(gr.top_block):
                               options.tx_freq, options.tx_gain,
                               options.spec, options.antenna,
                               options.verbose, options.external)
-        elif options.outfile is not None:
-          u = gr.file_sink(gr.sizeof_gr_complex, options.outfile)
         else:
           raise SystemExit("--tx-freq, --channel or --outfile must be specified\n")
 
@@ -58,11 +58,9 @@ class transmit_path(gr.top_block):
         """
         Adds usrp-specific options to the Options Parser
         """
-        normal.add_option("", "--infile", type="string",
-                          help="select input file to TX from")
         normal.add_option("", "--outfile", type="string",
                           help="select output file to modulate to")
-        normal.add_option ("-c", "--channel", type="eng_float", default=15,
+        normal.add_option ("-c", "--channel", type="eng_float", default=17,
                           help="Set 802.15.4 Channel to listen on channel %default", metavar="FREQ")
         normal.add_option("", "--amp", type="eng_float", default=1, metavar="AMPL",
                           help="set transmitter digital amplifier: [default=%default]")
